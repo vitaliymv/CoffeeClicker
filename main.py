@@ -97,6 +97,7 @@ class CoffeeManager(QWidget):
 
         self.crystal_btn = QPushButton("💎", self)
         self.crystal_btn.setGeometry(50, 360, 50, 50)
+        self.crystal_btn.clicked.connect(self.collect_crystal)
         self.crystal_btn.hide()
         self.update_ui()
 
@@ -150,6 +151,7 @@ class CoffeeManager(QWidget):
     def hide_crystal(self):
         self.crystal_btn.hide()
         self.crystal_active = False
+        self.crystal_move_timer.stop()
 
     def spawn_crystal(self):
         if not self.crystal_active and random.randint(1, 5) == 1:
@@ -160,8 +162,8 @@ class CoffeeManager(QWidget):
             self.crystal_btn.move(x, y)
             self.crystal_btn.show()
 
-            self.crystal_dx = random.choice([-5, -4, 4, 5])
-            self.crystal_dy = random.choice([-5, -4, 4, 5])
+            self.crystal_dx = random.choice([-3, -2, 2, 3])
+            self.crystal_dy = random.choice([-3, -2, 2, 3])
             self.crystal_move_timer.start(16)
             QTimer.singleShot(10000, self.hide_crystal)
 
@@ -189,6 +191,12 @@ class CoffeeManager(QWidget):
 
         self.crystal_btn.move(x + self.crystal_dx, y + self.crystal_dy)
 
+    def collect_crystal(self):
+        self.money += random.randint(20, 50)
+        for _ in range(20):
+            ParticleBurst(self, self.crystal_btn.x(), self.crystal_btn.y())
+        self.hide_crystal()
+        self.update_ui()
 
 app = QApplication(sys.argv)
 window = CoffeeManager()
