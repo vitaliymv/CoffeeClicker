@@ -1,8 +1,8 @@
 import sys
-
 from PyQt5.QtCore import QPropertyAnimation, QPoint, Qt, QTimer
-from PyQt5.QtWidgets import QLabel, QWidget, QProgressBar, QPushButton, QApplication
+from PyQt5.QtWidgets import QLabel, QWidget, QProgressBar, QPushButton, QApplication, QMessageBox
 import random
+from storage import save_to_file, load_from_file
 
 class ParticleBurst(QLabel):
     def __init__(self, parent, x, y):
@@ -25,7 +25,7 @@ class ParticleBurst(QLabel):
 class CoffeeManager(QWidget):
     def __init__(self):
         super().__init__()
-
+        save = load_from_file()
         self.money = 0
         self.income_per_click = 1
         self.auto_income = 0
@@ -35,10 +35,22 @@ class CoffeeManager(QWidget):
         self.exp_to_next = 20
         self.upgrade_click_price = 5
         self.upgrade_auto_price = 10
+
+        if save:
+            self.money = save["money"]
+            self.income_per_click = save["income_per_click"]
+            self.auto_income = save["auto_income"]
+            self.exp = save["exp"]
+            self.level = save["level"]
+            self.exp_to_next = save["exp_to_next"]
+            self.upgrade_click_price = save["upgrade_click_price"]
+            self.upgrade_auto_price = save["upgrade_auto_price"]
+
+
         self.achievements = set()
         self.crystal_active = False
         self.init_ui()
-
+        self.update_ui()
         self.crystal_dx = 4
         self.crystal_dy = 4
         self.crystal_move_timer = QTimer()
@@ -51,6 +63,30 @@ class CoffeeManager(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.game_loop)
         self.timer.start(1000)
+
+    def closeEvent(self, a0):
+        question = QMessageBox.question(
+            self,
+            "Message",
+            "Are you sure to quit?",
+            (QMessageBox.Yes | QMessageBox.No)
+        )
+        if question == QMessageBox.Yes:
+            a0.accept()
+            save = {
+                "money": self.money,
+                "income_per_click": self.income_per_click,
+                "auto_income": self.auto_income,
+                "exp": self.exp,
+                "level": self.level,
+                "exp_to_next": self.exp_to_next,
+                "upgrade_click_price": self.upgrade_click_price,
+                "upgrade_auto_price": self.upgrade_auto_price,
+            }
+            save_to_file(save)
+        else:
+            a0.ignore()
+
 
     def init_ui(self):
         self.setStyleSheet("""
