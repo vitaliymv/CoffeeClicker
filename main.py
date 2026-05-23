@@ -55,12 +55,14 @@ class CoffeeManager(QWidget):
         self.money = 0
         self.income_per_click = 1
         self.auto_income = 0
+        self.auto_speed = 1000
 
         self.exp = 0
         self.level = 1
         self.exp_to_next = 20
         self.upgrade_click_price = 5
         self.upgrade_auto_price = 10
+        self.upgrade_speed_price = 50
 
         if save:
             self.money = save["money"]
@@ -71,6 +73,8 @@ class CoffeeManager(QWidget):
             self.exp_to_next = save["exp_to_next"]
             self.upgrade_click_price = save["upgrade_click_price"]
             self.upgrade_auto_price = save["upgrade_auto_price"]
+            self.upgrade_speed_price = save["upgrade_speed_price"]
+            self.auto_speed = save["auto_speed"]
 
         self.achievements = {
             "Earn 50 money": False,
@@ -101,7 +105,7 @@ class CoffeeManager(QWidget):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.game_loop)
-        self.timer.start(1000)
+        self.timer.start(self.auto_speed)
 
     def closeEvent(self, a0):
         question = QMessageBox.question(
@@ -121,6 +125,8 @@ class CoffeeManager(QWidget):
                 "exp_to_next": self.exp_to_next,
                 "upgrade_click_price": self.upgrade_click_price,
                 "upgrade_auto_price": self.upgrade_auto_price,
+                "upgrade_speed_price": self.upgrade_speed_price,
+                "auto_speed": self.auto_speed
             }
             save_to_file(save)
         else:
@@ -174,20 +180,59 @@ class CoffeeManager(QWidget):
         self.upgrade_auto_btn.setGeometry(260, 150, 100, 60)
         self.upgrade_auto_btn.clicked.connect(self.upgrade_auto)
 
+        self.upgrade_auto_speed_btn = QPushButton("⚡️auto", self)
+        self.upgrade_auto_speed_btn.setGeometry(370, 150, 100, 60)
+        self.upgrade_auto_speed_btn.clicked.connect(self.upgrade_speed)
+
+        self.label_speed_price = QLabel(self)
+        self.label_speed_price.setGeometry(370, 220, 100, 30)
+        self.label_speed_price.setAlignment(Qt.AlignCenter)
+        self.label_speed_price.setText(str(self.upgrade_speed_price))
+
         self.crystal_btn = QPushButton("💎", self)
         self.crystal_btn.setGeometry(50, 360, 50, 50)
         self.crystal_btn.clicked.connect(self.collect_crystal)
         self.crystal_btn.hide()
         self.update_ui()
 
+    def upgrade_speed(self):
+        if self.money >= self.upgrade_speed_price and self.auto_speed >= 100:
+            self.money -= self.upgrade_speed_price
+            self.auto_speed -= 50
+            self.upgrade_speed_price *= 1.3
+            self.upgrade_speed_price = round(self.upgrade_speed_price)
+            self.update_ui()
+
     def update_ui(self):
         self.label.setText(
-            f"💰 {self.money} | ☕ {self.income_per_click} | 🤵🏻 {self.auto_income} | ⭐ {self.level}"
+            f"💰 {self.money} | ☕ {self.income_per_click} | 🤵🏻 {self.auto_income} | ⭐ {self.level} | ⚡️ {self.auto_speed}"
         )
         self.progress.setMaximum(self.exp_to_next)
         self.progress.setValue(self.exp)
         self.label_click_price.setText(str(self.upgrade_click_price))
         self.label_auto_price.setText(str(self.upgrade_auto_price))
+        self.label_speed_price.setText(str(self.upgrade_speed_price))
+
+        if self.level < 3:
+            self.upgrade_click_btn.setEnabled(False)
+            self.upgrade_click_btn.setText("From Lv.3")
+        else:
+            self.upgrade_click_btn.setEnabled(True)
+            self.upgrade_click_btn.setText("⬆️ click +1")
+
+        if self.level < 5:
+            self.upgrade_auto_btn.setEnabled(False)
+            self.upgrade_auto_btn.setText("From Lv.5")
+        else:
+            self.upgrade_auto_btn.setEnabled(True)
+            self.upgrade_auto_btn.setText("🤵🏻 auto +1")
+
+        if self.level < 7:
+            self.upgrade_auto_speed_btn.setEnabled(False)
+            self.upgrade_auto_speed_btn.setText("From Lv.7")
+        else:
+            self.upgrade_auto_speed_btn.setEnabled(True)
+            self.upgrade_auto_speed_btn.setText("⚡️auto")
 
     def sell_coffee(self):
         self.money += self.income_per_click
