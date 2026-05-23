@@ -24,7 +24,7 @@ class AchievementsWindow(QWidget):
                 padding: 5px
             }            
         """)
-        self.list_widget = QListWidget()
+        self.list_widget = QListWidget(self)
         self.list_widget.setGeometry(10, 10, 390, 390)
         for name, status in achievements_data.items():
             icon = "✅" if status else "❌"
@@ -86,6 +86,7 @@ class CoffeeManager(QWidget):
             "Buy 5 auto income": False,
             "Buy 10 auto income": False,
         }
+        self.load_achievements()
         self.crystal_active = False
         self.init_ui()
         self.update_ui()
@@ -138,14 +139,18 @@ class CoffeeManager(QWidget):
             QPushButton:hover { background-color: #50507a; }
         """)
         self.setWindowTitle("Coffee Manager Clicker")
-        self.setFixedSize(400, 500)
+        self.setFixedSize(500, 500)
 
         self.label = QLabel(self)
-        self.label.setGeometry(50, 20, 300, 40)
+        self.label.setGeometry(50, 20, 400, 40)
         self.label.setAlignment(Qt.AlignCenter)
 
+        self.ac_btn = QPushButton("🏆", self)
+        self.ac_btn.setGeometry(10, 10, 50, 50)
+        self.ac_btn.clicked.connect(self.open_achievements)
+
         self.progress = QProgressBar(self)
-        self.progress.setGeometry(50, 80, 315, 40)
+        self.progress.setGeometry(50, 80, 450, 40)
 
         self.coffee_btn = QPushButton("☕🤎🥯🍪", self)
         self.coffee_btn.setGeometry(50, 150, 100, 60)
@@ -205,6 +210,7 @@ class CoffeeManager(QWidget):
         if self.auto_income > 0:
             self.add_exp(1)
         self.update_ui()
+        self.check_achievements()
 
     def upgrade_click(self):
         if self.money >= self.upgrade_click_price:
@@ -219,7 +225,7 @@ class CoffeeManager(QWidget):
             self.money -= self.upgrade_auto_price
             self.auto_income += 1
             self.upgrade_auto_price *= 1.3
-            self.upgrade_auto_price = round(self.upgrade_click_price)
+            self.upgrade_auto_price = round(self.upgrade_auto_price)
             self.update_ui()
 
     def hide_crystal(self):
@@ -295,7 +301,7 @@ class CoffeeManager(QWidget):
         self.save_achievements()
         label = QLabel(f"🏅 {name} taken", self)
         label.adjustSize()
-        label.move(100, 200)
+        label.move(150, 300)
         label.show()
         QTimer.singleShot(2000, label.deleteLater)
 
