@@ -1,8 +1,34 @@
+import json
 import sys
 from PyQt5.QtCore import QPropertyAnimation, QPoint, Qt, QTimer
-from PyQt5.QtWidgets import QLabel, QWidget, QProgressBar, QPushButton, QApplication, QMessageBox
+from PyQt5.QtWidgets import QLabel, QWidget, QProgressBar, QPushButton, QApplication, QMessageBox, QListWidget
 import random
 from storage import save_to_file, load_from_file
+
+ACHIEVEMENTS_FILE = "achievements.json"
+
+class AchievementsWindow(QWidget):
+    def __init__(self, achievements_data):
+        super().__init__()
+        self.setWindowTitle("Achievements")
+        self.setFixedSize(400, 400)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e2f;
+                color: white;
+                font-size: 15px;
+            }
+            QListWidget {
+                background-color: #2a2a40;
+                border-radius: 10px;
+                padding: 5px
+            }            
+        """)
+        self.list_widget = QListWidget()
+        self.list_widget.setGeometry(10, 10, 390, 390)
+        for name, status in achievements_data.items():
+            icon = "✅" if status else "❌"
+            self.list_widget.addItem(f"{icon} {name}")
 
 class ParticleBurst(QLabel):
     def __init__(self, parent, x, y):
@@ -46,8 +72,20 @@ class CoffeeManager(QWidget):
             self.upgrade_click_price = save["upgrade_click_price"]
             self.upgrade_auto_price = save["upgrade_auto_price"]
 
-
-        self.achievements = set()
+        self.achievements = {
+            "Earn 50 money": False,
+            "Earn 100 money": False,
+            "Earn 500 money": False,
+            "Level 5": False,
+            "Level 10": False,
+            "Level 15": False,
+            "10 click power": False,
+            "25 click power": False,
+            "50 click power": False,
+            "Buy auto income": False,
+            "Buy 5 auto income": False,
+            "Buy 10 auto income": False,
+        }
         self.crystal_active = False
         self.init_ui()
         self.update_ui()
@@ -234,9 +272,60 @@ class CoffeeManager(QWidget):
         self.hide_crystal()
         self.update_ui()
 
+    def load_achievements(self):
+        try:
+            with open(ACHIEVEMENTS_FILE, "r") as file:
+                self.achievements = json.load(file)
+        except FileNotFoundError:
+            return
+
+    def save_achievements(self):
+        with open(ACHIEVEMENTS_FILE, "w") as file:
+            json.dump(self.achievements, file, indent=4)
+
+    def open_achievements(self):
+        self.ac_window = AchievementsWindow(self.achievements)
+        self.ac_window.show()
+
+    def unlock(self, name):
+        if self.achievements[name]:
+            return
+
+        self.achievements[name] = True
+        self.save_achievements()
+        label = QLabel(f"🏅 {name} taken", self)
+        label.adjustSize()
+        label.move(100, 200)
+        label.show()
+        QTimer.singleShot(2000, label.deleteLater)
+
+    def check_achievements(self):
+        if self.money >= 50:
+            self.unlock("Earn 50 money")
+        if self.money >= 100:
+            self.unlock("Earn 100 money")
+        if self.money >= 500:
+            self.unlock("Earn 500 money")
+        if self.level >= 5:
+            self.unlock("Level 5")
+        if self.level >= 10:
+            self.unlock("Level 10")
+        if self.level >= 15:
+            self.unlock("Level 15")
+        if self.income_per_click >= 10:
+            self.unlock("10 click power")
+        if self.income_per_click >= 25:
+            self.unlock("25 click power")
+        if self.income_per_click >= 50:
+            self.unlock("50 click power")
+        if self.auto_income >= 1:
+            self.unlock("Buy auto income")
+        if self.auto_income >= 5:
+            self.unlock("Buy 5 auto income")
+        if self.auto_income >= 10:
+            self.unlock("Buy 10 auto income")
+
 app = QApplication(sys.argv)
 window = CoffeeManager()
 window.show()
 sys.exit(app.exec_())
-
-# tooltip for label, tooltip for button
