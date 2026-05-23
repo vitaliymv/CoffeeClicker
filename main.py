@@ -198,7 +198,7 @@ class CoffeeManager(QWidget):
     def upgrade_speed(self):
         if self.money >= self.upgrade_speed_price and self.auto_speed >= 100:
             self.money -= self.upgrade_speed_price
-            self.auto_speed -= 50
+            self.auto_speed -= 20
             self.upgrade_speed_price *= 1.3
             self.upgrade_speed_price = round(self.upgrade_speed_price)
             self.update_ui()
@@ -234,11 +234,15 @@ class CoffeeManager(QWidget):
             self.upgrade_auto_speed_btn.setEnabled(True)
             self.upgrade_auto_speed_btn.setText("⚡️auto")
 
+        if self.auto_speed <= 100:
+            self.upgrade_auto_speed_btn.setEnabled(False)
+            self.label_speed_price.setText("MAX")
+
     def sell_coffee(self):
         self.money += self.income_per_click
         self.add_exp(1)
         for _ in range(6):
-            ParticleBurst(self, 75, 155)
+            ParticleBurst(self, self.coffee_btn.x() + 40, self.coffee_btn.y() + 20)
         self.update_ui()
 
     def add_exp(self, amount):
